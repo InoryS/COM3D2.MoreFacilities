@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Harmony;
 using HarmonyLib;
 using System;
@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace COM3D2.MoreFacilities.Plugin.Core
 {
-    [BepInPlugin("org.guest4168.plugins.morefacilitiesplugin", "More Facilities Plug-In", "1.0.1.0")]
+    [BepInPlugin("org.guest4168.plugins.morefacilitiesplugin", "More Facilities Plug-In", "1.0.2.0")]
     public class MoreFacilities : BaseUnityPlugin
     {
         #region Main Code
@@ -15,6 +15,7 @@ namespace COM3D2.MoreFacilities.Plugin.Core
         //Constants that are may be adjustable in the future
         public const int MaxFacilities = 60;    //Maximum facilities to make available
         private const int scrollJump = 1;       //How many rows you move when scrolling
+        private float updateInterval = 60f; // Change this value according to your needs
 
         //Variables needed by Update -- scrollPosition tracking, and original position vector
         private int wfd_scrollPosition = 0;
@@ -23,133 +24,147 @@ namespace COM3D2.MoreFacilities.Plugin.Core
         private int wfl_scrollPosition = 0;
         private UnityEngine.Vector3 wfl_originalPosition = new UnityEngine.Vector3(-9001f, -9001f, -9001f);
 
-        private void Update()
+
+        private void Start()
         {
-            //Check that the Main Window is loaded, this can be inactive while grid can be active, creates problems when using other tabs on facility page
-            UnityEngine.GameObject windowFacilityDetails = UnityEngine.GameObject.Find("Window Facility Details");
-            if (windowFacilityDetails == null || windowFacilityDetails.activeInHierarchy == false)
-            {
-                //Reset
-                wfd_scrollPosition = -1;
-            }
-            else
-            {
-                //Check that the Facility Grid is loaded
-                UnityEngine.GameObject listToFakeScroll = UnityEngine.GameObject.Find("Parent Facility Button");
-                this.fakeScroll(listToFakeScroll, 0, ref wfd_scrollPosition, 4, 3, scrollJump, ref wfd_originalPosition, true);
-            }
-
-            //This is for Facility Refinement Maid Job
-            UnityEngine.GameObject windowFacilityList = UnityEngine.GameObject.Find("Window Facility List");
-            if (windowFacilityList != null)
-            {
-                //Update the actual container -- name of this was too generic so had to grab parent first
-                UnityEngine.GameObject parentButton = windowFacilityList.transform.GetChild(1).gameObject;
-                this.fakeScroll(parentButton, 1, ref wfl_scrollPosition, 12, 1, scrollJump, ref wfl_originalPosition, false);
-            }
-
+            StartCoroutine(PeriodicUpdate());
         }
 
-        private void fakeScroll(UnityEngine.GameObject listToFakeScroll, int mode, ref int scrollPosition, int visibleRows, int numOfColums, int scrollRowJump, ref UnityEngine.Vector3 originalPosition, bool allowArrows)
+        private IEnumerator PeriodicUpdate()
         {
-            //Check that the item you want to scroll exists
-            if (listToFakeScroll != null)
+            while (true)
             {
-                int listCount = listToFakeScroll.transform.childCount - 1; //Theres usually a dummy item in these lists at the beginning
-                int maxScrollPosition = (int)Math.Ceiling((decimal)((listCount - 1) / (numOfColums * scrollRowJump)));
+                // Your update logic here
 
-                int scroll = 0;
-                int oldScrollPosition = scrollPosition;
+                yield return new WaitForSeconds(updateInterval);
+            }
 
-                //Had to cheat
-                if (scrollPosition == -1)
+            {
+                //Check that the Main Window is loaded, this can be inactive while grid can be active, creates problems when using other tabs on facility page
+                UnityEngine.GameObject windowFacilityDetails = UnityEngine.GameObject.Find("Window Facility Details");
+                if (windowFacilityDetails == null || windowFacilityDetails.activeInHierarchy == false)
                 {
-                    scrollPosition = 0;
+                    //Reset
+                    wfd_scrollPosition = -1;
+                }
+                else
+                {
+                    //Check that the Facility Grid is loaded
+                    UnityEngine.GameObject listToFakeScroll = UnityEngine.GameObject.Find("Parent Facility Button");
+                    this.fakeScroll(listToFakeScroll, 0, ref wfd_scrollPosition, 4, 3, scrollJump, ref wfd_originalPosition, true);
                 }
 
-                //Capture Arrow Keys and Mouse Wheel Scroll
-                if (UnityEngine.Input.GetAxis("Mouse ScrollWheel") != 0f || (allowArrows && (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.DownArrow) || UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.UpArrow))))
+                //This is for Facility Refinement Maid Job
+                UnityEngine.GameObject windowFacilityList = UnityEngine.GameObject.Find("Window Facility List");
+                if (windowFacilityList != null)
                 {
+                    //Update the actual container -- name of this was too generic so had to grab parent first
+                    UnityEngine.GameObject parentButton = windowFacilityList.transform.GetChild(1).gameObject;
+                    this.fakeScroll(parentButton, 1, ref wfl_scrollPosition, 12, 1, scrollJump, ref wfl_originalPosition, false);
+                }
 
-                    //Scroll direction
-                    scroll = (UnityEngine.Input.GetAxis("Mouse ScrollWheel") < 0f || UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.DownArrow)) ? 1 : -1;
+            }
 
-                    //Store the original position of the grid for when we leave and have to come back here
-                    if (originalPosition.x == (-9001f))
+            private void fakeScroll(UnityEngine.GameObject listToFakeScroll, int mode, ref int scrollPosition, int visibleRows, int numOfColums, int scrollRowJump, ref UnityEngine.Vector3 originalPosition, bool allowArrows)
+            {
+                //Check that the item you want to scroll exists
+                if (listToFakeScroll != null)
+                {
+                    int listCount = listToFakeScroll.transform.childCount - 1; //Theres usually a dummy item in these lists at the beginning
+                    int maxScrollPosition = (int)Math.Ceiling((decimal)((listCount - 1) / (numOfColums * scrollRowJump)));
+
+                    int scroll = 0;
+                    int oldScrollPosition = scrollPosition;
+
+                    //Had to cheat
+                    if (scrollPosition == -1)
                     {
-                        originalPosition = new UnityEngine.Vector3(listToFakeScroll.transform.position.x,
-                                                                   listToFakeScroll.transform.position.y,
-                                                                   listToFakeScroll.transform.position.z);
-
-                        //This is buggy bc of string length, especially if anyone tries to rename their facility, this kinda overwrites it as they type cause its in update and not gui
-                        //for (int i = 1; i < listToFakeScroll.transform.childCount; i++)
-                        //{
-                        //    //Update the Text to show that there are now more facilities, hopefully people will try to scroll or use arrow keys when they see, otherwise need to add some kinda indicator
-                        //    listToFakeScroll.transform.GetChild(i).gameObject.GetComponent<FacilityInfoUI>().textFacilityName.text += "   " + i + "/" + MaxFacilities;
-                        //}
+                        scrollPosition = 0;
                     }
-                }
 
-                //Do not want to scroll too far
-                scrollPosition += scroll;
-                scrollPosition = Math.Max(scrollPosition, 0);
-                scrollPosition = Math.Min(scrollPosition, maxScrollPosition);
-
-                //Loop the children to set visibility, regardless of if scrollPosition changed bc have to hide extras when first initializing
-                int minVisible = (scrollPosition * (numOfColums * scrollRowJump)) + 1;
-                int maxVisible = minVisible + ((numOfColums * visibleRows) - 1);
-
-                for (int i = 1; i < listToFakeScroll.transform.childCount; i++)
-                {
-                    if (minVisible <= i && i <= maxVisible)
+                    //Capture Arrow Keys and Mouse Wheel Scroll
+                    if (UnityEngine.Input.GetAxis("Mouse ScrollWheel") != 0f || (allowArrows && (UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.DownArrow) || UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.UpArrow))))
                     {
-                        //Positioning mode or activate mode
-                        switch (mode)
+
+                        //Scroll direction
+                        scroll = (UnityEngine.Input.GetAxis("Mouse ScrollWheel") < 0f || UnityEngine.Input.GetKeyDown(UnityEngine.KeyCode.DownArrow)) ? 1 : -1;
+
+                        //Store the original position of the grid for when we leave and have to come back here
+                        if (originalPosition.x == (-9001f))
                         {
-                            case 0:
-                                listToFakeScroll.transform.GetChild(i).gameObject.transform.localScale = new UnityEngine.Vector3(1f, 1f, 1f);
-                                break;
-                            case 1:
-                                listToFakeScroll.transform.GetChild(i).gameObject.SetActive(true);
-                                break;
+                            originalPosition = new UnityEngine.Vector3(listToFakeScroll.transform.position.x,
+                                                                       listToFakeScroll.transform.position.y,
+                                                                       listToFakeScroll.transform.position.z);
+
+                            //This is buggy bc of string length, especially if anyone tries to rename their facility, this kinda overwrites it as they type cause its in update and not gui
+                            //for (int i = 1; i < listToFakeScroll.transform.childCount; i++)
+                            //{
+                            //    //Update the Text to show that there are now more facilities, hopefully people will try to scroll or use arrow keys when they see, otherwise need to add some kinda indicator
+                            //    listToFakeScroll.transform.GetChild(i).gameObject.GetComponent<FacilityInfoUI>().textFacilityName.text += "   " + i + "/" + MaxFacilities;
+                            //}
                         }
                     }
-                    else
+
+                    //Do not want to scroll too far
+                    scrollPosition += scroll;
+                    scrollPosition = Math.Max(scrollPosition, 0);
+                    scrollPosition = Math.Min(scrollPosition, maxScrollPosition);
+
+                    //Loop the children to set visibility, regardless of if scrollPosition changed bc have to hide extras when first initializing
+                    int minVisible = (scrollPosition * (numOfColums * scrollRowJump)) + 1;
+                    int maxVisible = minVisible + ((numOfColums * visibleRows) - 1);
+
+                    for (int i = 1; i < listToFakeScroll.transform.childCount; i++)
                     {
-                        //Positioning mode or activate mode
-                        switch (mode)
+                        if (minVisible <= i && i <= maxVisible)
                         {
-                            case 0:
-                                listToFakeScroll.transform.GetChild(i).gameObject.transform.localScale = new UnityEngine.Vector3(0f, 0f, 0f);
-                                break;
-                            case 1:
-                                listToFakeScroll.transform.GetChild(i).gameObject.SetActive(false);
-                                break;
+                            //Positioning mode or activate mode
+                            switch (mode)
+                            {
+                                case 0:
+                                    listToFakeScroll.transform.GetChild(i).gameObject.transform.localScale = new UnityEngine.Vector3(1f, 1f, 1f);
+                                    break;
+                                case 1:
+                                    listToFakeScroll.transform.GetChild(i).gameObject.SetActive(true);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            //Positioning mode or activate mode
+                            switch (mode)
+                            {
+                                case 0:
+                                    listToFakeScroll.transform.GetChild(i).gameObject.transform.localScale = new UnityEngine.Vector3(0f, 0f, 0f);
+                                    break;
+                                case 1:
+                                    listToFakeScroll.transform.GetChild(i).gameObject.SetActive(false);
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (mode == 0)
+                    {
+                        //Now see if we actually changed, and move the container grid object
+                        if (originalPosition.x != (-9001f) && scrollPosition != oldScrollPosition)
+                        {
+                            float diff = listToFakeScroll.transform.GetChild(1).transform.position.y - listToFakeScroll.transform.GetChild(1 + (numOfColums * scrollRowJump)).transform.position.y;
+                            listToFakeScroll.transform.position = new UnityEngine.Vector3(originalPosition.x,
+                                                                                          originalPosition.y + (scrollPosition * scrollRowJump * diff),
+                                                                                          originalPosition.z);
                         }
                     }
                 }
-
-                if (mode == 0)
+                else
                 {
-                    //Now see if we actually changed, and move the container grid object
-                    if (originalPosition.x != (-9001f) && scrollPosition != oldScrollPosition)
-                    {
-                        float diff = listToFakeScroll.transform.GetChild(1).transform.position.y - listToFakeScroll.transform.GetChild(1 + (numOfColums * scrollRowJump)).transform.position.y;
-                        listToFakeScroll.transform.position = new UnityEngine.Vector3(originalPosition.x,
-                                                                                      originalPosition.y + (scrollPosition * scrollRowJump * diff),
-                                                                                      originalPosition.z);
-                    }
+                    //Reset
+                    scrollPosition = -1;
                 }
             }
-            else
-            {
-                //Reset
-                scrollPosition = -1;
-            }
-        }
         #endregion
 
-        #region Harmony Patching
+            #region Harmony Patching
         private UnityEngine.GameObject managerObject;
         public void Awake()
         {
