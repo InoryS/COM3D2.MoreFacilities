@@ -1,10 +1,8 @@
-﻿using BepInEx.Harmony;
-using HarmonyLib;
+﻿using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 
-namespace COM3D2.MoreFacilities.Plugin.Core
+namespace COM3D2.MoreFacilities.Plugin
 {
     internal static class MoreFacilitiesHooks
     {
@@ -17,7 +15,7 @@ namespace COM3D2.MoreFacilities.Plugin.Core
             if (MoreFacilitiesHooks.initialized)
                 return;
 
-            MoreFacilitiesHooks.instance = HarmonyWrapper.PatchAll(typeof(MoreFacilitiesHooks), "org.guest4168.morefacilitiesplugin.hooks.base");
+            MoreFacilitiesHooks.instance = Harmony.CreateAndPatchAll(typeof(MoreFacilitiesHooks), "org.guest4168.morefacilitiesplugin.hooks.base");
             MoreFacilitiesHooks.initialized = true;
 
             //Plugin variables

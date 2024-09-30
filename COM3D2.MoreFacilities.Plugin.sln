@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{D00152BA-8CB3-1546-1BDA-4C86DE05F8E6}") = "COM3D2.MoreFacilities.Plugin", "COM3D2.MoreFacilities.Plugin\COM3D2.MoreFacilities.Plugin.csproj", "{D906D965-41CC-F8A9-B350-2BB0C346D9D2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D906D965-41CC-F8A9-B350-2BB0C346D9D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D906D965-41CC-F8A9-B350-2BB0C346D9D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D906D965-41CC-F8A9-B350-2BB0C346D9D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D906D965-41CC-F8A9-B350-2BB0C346D9D2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
