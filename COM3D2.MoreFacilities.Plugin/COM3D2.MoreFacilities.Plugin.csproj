@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net35</TargetFramework>
-        <AssemblyName>COM3D2.MoreFacilities.Pluginn</AssemblyName>
+        <AssemblyName>COM3D2.MoreFacilities.Plugin</AssemblyName>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
