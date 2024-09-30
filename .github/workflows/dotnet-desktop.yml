@@ -37,4 +37,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: COM3D2.MoreFacilities.Plugin
-          path: /home/runner/work/COM3D2.MoreFacilities/COM3D2.MoreFacilities.Plugin/COM3D2.MoreFacilities.Plugin/bin/Release/net35/COM3D2.MoreFacilities.Plugin
+          path: /home/runner/work/COM3D2.MoreFacilities/COM3D2.MoreFacilities/COM3D2.MoreFacilities.Plugin/bin/Release/net35/COM3D2.MoreFacilities.Plugin.dll
